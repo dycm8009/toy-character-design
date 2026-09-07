@@ -1,405 +1,703 @@
 ---
 name: toy-character-design
 description: >
-  盲盒玩偶/设计师玩具系列设计生成器。支持角色一致性保障、姿势多样性、丰富场景背景和专业打光。
-  使用场景：当用户想要设计盲盒系列、潮玩手办、毛绒挂件、亚克力立牌时。
-  关键词：盲盒设计、designer toy、vinyl figure、潮玩、chibi、角色锚点、群像单人一致性
+  潮玩角色与盲盒系列设计系统。先探索差异化审美方向，再锁定 IP 核心与视觉 DNA，随后完成系列变形、材质/商品形态、群像、单人图与质量审查。
+  适用于原创潮玩角色、盲盒系列、搪胶/软胶、毛绒与搪胶毛绒、挂件、摆件及其他收藏型角色商品。
+  关键词：潮玩设计、designer toy、art toy、角色DNA、轮廓识别、系列设计、视觉一致性、盲盒、vinyl figure、plush pendant
 ---
 
 # 玩具角色设计
 
-基于 [zsyggg/designer-toy-skill](https://github.com/zsyggg/designer-toy-skill/blob/main/SKILL.md) 改编，保留原有六阶段流程与设计思想。
+本 Skill 保留原有“群像 → 单人图 → 一致性检查”的可靠生成骨架，但不再把“chibi + 大眼 + 换装”当作潮玩的默认答案。
 
-## 执行约定
+核心目标是把流程从“填模板”升级为：
 
-- 从当前需求提取主题、角色参考、产品形态和款数，只询问确实缺失且影响设计的信息。用户只要方案或提示词时，完成对应部分，不自动生成整套图片。
-- 下文比例、眼睛尺寸、色号、节日主题、材质、4K 和拍摄参数是示例或可选表达，不是固定美学；根据本次设计确定锚点，锁定后复用。平面产品使用对应表现方式。
-- 使用当前可用的图像生成工具，在 ChatGPT 中优先使用 imagegen，遵循工具的参考图传入规范。单人图必须传入真实群像图片并明确位置，不能只写文件名代替图片输入。无法生图或取得参考图时说明缺失项，交付已完成的方案和提示词，不声称图片已生成。
-- 按用户约定的确认节点执行，已有授权不重复确认；没有特别约定时按六阶段推进。
-- 色名与 Hex 是设计目标，不保证生成图片像素级精确。查看实际图片后再判断一致性。
-- 交付可直接使用的提示词时，将已确定的角色和服装锚点展开写入每条提示词，不让用户自行替换“粘贴锚点 A/O1”等占位符。尚未生成群像时，实际位置可标为待核验，不能虚构已完成的视觉映射。
+> **需求 → 审美路线探索 → IP Core → Visual DNA → 系列变形语法 → 材质/商品形态 → 群像 → 单人图 → 双重 QC**
 
+具体样式机制、组合规则和评分表放在：
 
-## Overview
+- `references/style-presets.md`
+- `references/design-rules.md`
+- `references/market-readiness-scorecard.md`
+- `schemas/design-spec.yaml`
 
-生成设计师玩偶/盲盒系列。**核心能力**：
-- **角色一致性保障**：确保群像和单人图中角色特征完全一致（发色、眼睛、比例）
-- **姿势多样性**：避免全部站姿，提供坐/趴/躺/悬浮等丰富姿势
-- **场景丰富度**：包含打光、背景、氛围的完整场景设计
+这些参考文件是设计知识库，不要求把所有字段逐项询问用户。
 
-## 工作流程
+---
+
+## 0. 执行原则
+
+### 0.1 不把用户变成填表员
+
+先从用户现有描述中推断设计方向，只询问真正会改变结果的缺失信息。
+
+默认每轮最多集中确认少量关键决策；其余字段由 Skill 提案，并允许用户修改。
+
+### 0.2 不默认 Chibi
+
+禁止把以下内容当成默认基础：
+
+- 固定大头小身
+- 固定大眼睛
+- 固定圆脸
+- 固定可爱微笑
+- 固定 vinyl figure
+- 固定 3D 高细节商品渲染
+
+它们都只是可选路线。
+
+### 0.3 先创造设计机制，再写长 Prompt
+
+当角色尚未定型时，不直接生成“完整精致成品”。先确定：
+
+1. 角色为什么存在
+2. 第一眼靠什么被记住
+3. 黑色剪影是否有身份
+4. 哪些视觉 DNA 永远不变
+5. 系列变化遵循什么规则
+
+### 0.4 热门 IP 只学习方法，不复制部件
+
+禁止建立“某某 IP 风格”预设，也不要直接复用知名角色的独占识别组合。
+
+可以抽象学习：
+
+- 可爱与怪异并存
+- 低信息量五官 + 强轮廓
+- 情绪作为角色本体
+- 材质成为视觉语言
+- 极端表情成为系列规则
+- 软硬材质反差
+- 可穿戴/可挂/可互动
+
+但必须重新发明具体轮廓、器官、比例、标志和叙事。
+
+### 0.5 锁定分层
+
+所有设计字段分三层：
+
+- `IDENTITY_LOCKED`：角色身份 DNA，系列中不可随意改变
+- `SERIES_LOCKED`：本系列统一语法，只在当前系列锁定
+- `VARIANT_FLEXIBLE`：每款允许自由变化
+
+不再把所有细节都设为 LOCKED，以免一致性机制压制创造力。
+
+---
+
+# 1. 工作流程
 
 ```mermaid
 flowchart TD
-    A["1. 定义角色锚点"] --> B["2. 设计系列款式"]
-    B --> C["3. 生成群像"]
-    C --> D["4. 创建位置映射表"]
-    D --> E["5. 逐个生成单人图"]
-    E --> F{"6. 一致性检查"}
-    F -->|通过| G["完成"]
-    F -->|未通过| H["调整Prompt重新生成"]
-    H --> E
+    A["0. 需求与边界"] --> B["1. 审美路线探索"]
+    B --> C["2. 锁定 IP Core + Visual DNA"]
+    C --> D["3. 系列变形语法与款式架构"]
+    D --> E["4. 材质 / 商品形态 / 互动"]
+    E --> F["5. 生成群像"]
+    F --> G["6. 创建实际位置映射"]
+    G --> H["7. 逐个生成单人图"]
+    H --> I["8A. 视觉一致性 QC"]
+    I --> J["8B. 审美与市场就绪 QC"]
+    J -->|通过| K["完成"]
+    J -->|不通过| L["回到对应设计层修正"]
 ```
+
+原有群像和单人图流程继续保留，但它们不再是设计的起点。
 
 ---
 
-## 阶段 1：定义角色锚点 (CRITICAL)
+# 2. 阶段 0：需求与边界
 
-> [!IMPORTANT]
-> **必须**在所有图片生成中使用**完全相同**的角色锚点描述，否则会导致群像和单人图不一致！
+从已有信息提取：
 
-### 角色锚点模板
+- 原创 / 授权 / 共创
+- 单角色还是角色群
+- 目标用户与使用场景
+- 产品形态是否已确定
+- 是否需要系列化 / 盲盒化
+- 是否已有世界观、情绪、关键词或参考图
+- 用户偏好的确认节点
 
-为每个角色创建 `character-anchor.md` 文件：
+如果用户只给几个关键词，也可以直接进入路线探索，不要求先补齐完整设定。
+
+可选的商品化字段见 `schemas/design-spec.yaml`，不属于每次必填项。
+
+---
+
+# 3. 阶段 1：审美路线探索（核心新增）
+
+这是防止“同一套模板换皮”的关键阶段。
+
+## 3.1 什么时候必须做路线探索
+
+以下任一情况出现时，先做路线探索，不直接锁定角色：
+
+- 用户只有关键词
+- 角色第一版过于普通
+- 看起来像动画路人 / AI 脸
+- 之前多个候选只是服装、动作不同
+- 轮廓、比例、脸部结构高度相似
+- 用户希望“更有潮玩感 / 更有辨识度 / 更多类型”
+
+## 3.2 默认输出 4 条明显不同的方向
+
+每条路线必须至少在以下 **3 个高权重维度**上与其他路线不同：
+
+1. silhouette / 轮廓母体
+2. proportion / 质量分布与比例
+3. face grammar / 五官语法
+4. material strategy / 材质策略
+5. emotional posture / 情绪姿态
+6. series mechanism / 后续系列化机制
+
+只换颜色、发型、服装、动作，不算不同路线。
+
+## 3.3 路线卡格式
+
+```yaml
+route_id: R1
+core_mechanism: "一句话设计机制"
+silhouette: "第一眼轮廓"
+proportion: "身体质量如何分布"
+face_grammar: "五官如何组织，而非只写大眼/小眼"
+personality_tension: "看起来 X，但其实 Y"
+material_direction: "材料如何参与视觉"
+series_potential: "未来如何形成系列"
+risk: "最容易滑向什么俗套"
+```
+
+样式机制从 `references/style-presets.md` 中组合，但禁止一次堆叠太多 preset。
+
+## 3.4 路线多样性门槛
+
+进入下一阶段前快速检查：
+
+- 四条路线是否能仅看黑色剪影分成至少 3 类？
+- 是否至少有 2 条不是“大头圆脸人形”？
+- 是否存在明显不同的五官语法？
+- 是否至少有一条由材质或结构驱动，而不是服装驱动？
+- 是否至少有一条弱化“可爱”，探索 weird / rebel / melancholy / fashion 等其他轴？
+
+不满足时重新发散。
+
+---
+
+# 4. 阶段 2：IP Core + Visual DNA
+
+用户选定路线后，才正式锁定角色。
+
+## 4.1 IP Core
+
+角色至少需要以下四项：
+
+```yaml
+emotion_core: "角色长期承载的核心情绪或价值"
+character_desire: "它一直想做成什么"
+character_paradox: "看起来 X，但其实 Y"
+world_rule: "如果需要世界观，一条可持续产生故事的规则"
+```
+
+`character_paradox` 不是强制角色“叛逆”，而是防止角色只有单一形容词。
+
+## 4.2 Visual DNA
+
+Visual DNA 优先级高于服装。
+
+至少定义：
+
+```yaml
+silhouette_signature:
+  - "2–4 个轮廓识别点"
+recognition_tokens:
+  - "1–3 个局部身份标志"
+proportion_archetype: "soft-round / compact / lanky / top-heavy / creature / irregular / custom"
+body_mass_profile: "bean / pear / wedge / column / long-leg / top-heavy / custom"
+face_grammar: "五官布局与信息量规则"
+asymmetry_degree: 0-3
+personality_axes:
+  cute: 0-5
+  weird: 0-5
+  rebellious: 0-5
+  melancholy: 0-5
+  fashion: 0-5
+```
+
+### 轮廓原则
+
+每个原创 IP 推荐 2–4 个 `silhouette_signature`。
+
+至少 2 个应当在纯黑剪影里仍有意义，例如：
+
+- 特殊头部外轮廓
+- 不寻常肩胯比例
+- 身体质量集中位置
+- 标志性肢体长度关系
+- 头发/耳/角/帽体与头部融合形成的整体轮廓
+
+不要把“拿着某件道具”当成主要身份轮廓，除非它与角色永久融合。
+
+## 4.3 Face Grammar 不等于五官清单
+
+避免只填：大眼、小鼻、樱桃嘴。
+
+优先描述：
+
+- 信息量：极简 / 中等 / 高表达
+- 视觉重心：眼 / 嘴 / 眉 / 面罩 / 留白
+- 眼型关系：点状、窄缝、下垂、眼睑主导、无瞳、异形等
+- 嘴部关系：无嘴、微小、宽口、牙齿主导、偏位等
+- 面部留白比例
+- 对称 / 非对称
+- 表情变化幅度
+
+## 4.4 角色锚点文件
+
+生成 `character-anchor.md`：
 
 ```markdown
-# Character Anchor - [角色名称]
+# Character Anchor - [角色名]
 
-## LOCKED Identity (所有图片必须保持一致)
+## IDENTITY_LOCKED
+- IP Core: ...
+- Silhouette signatures: ...
+- Recognition tokens: ...
+- Proportion / body mass: ...
+- Face grammar: ...
+- Identity material cues: ...
 
-### Base Foundation
-Designer toy, vinyl figure collectible,
-professional product photography, studio lighting,
-chibi proportions, highly detailed collectible figure
+## SERIES_LOCKED
+- 本系列材质、颜色、变形规则等
 
-### Proportions (LOCKED)
-- Head-to-body ratio: [如 2.3:1]
-- Head shape: [如 Round but not perfectly round]
-- Body: [如 Slightly chubbier, approachable]
+## VARIANT_FLEXIBLE
+- 表情、姿势、局部配色、道具、服装等允许变化项
+```
 
-### Face (LOCKED)
-- Shape: [具体描述]
-- Expression base: [基础表情风格]
+注意：不再默认写 `chibi proportions`。
 
-### Eyes (LOCKED)
-- Size: [如 Large, 42% of face width]
-- Shape: [如 Round with subtle upturn at corners]
-- Pupils: [如 Large black with big highlights]
-- Expression: [如 Curious but confident, dreamy cool]
+---
 
-### Skin (LOCKED)
-- Tone: [颜色名 + Hex色号，如 Creamy fair #FFF5EE]
-- Texture: [如 Smooth matte vinyl]
+# 5. 阶段 3：系列变形语法
 
-### Hair Color (可变但需明确声明)
-- **发色变体表**:
-  - 基础款: [颜色 + Hex，如 Warm brown #8B4513]
-  - 精灵款: [颜色 + Hex，如 Golden blonde #F0C05A]
-  - 隐藏款: [颜色 + Hex，如 Silver white #C0C0C0]
+优秀系列不是“同一角色穿六套衣服”，而是同一 IP 在一条明确规则下产生多个变体。
 
-### Blush (LOCKED)
-- Shape: [如 Small circular]
-- Color: [颜色 + Hex，如 Soft pink #FFB0B0]
-- Style: [如 Soft gradient edges]
+## 5.1 先写 transformation rule
+
+在设计具体款式前，必须能用一句话回答：
+
+> **这一系列究竟用什么规则把同一个角色变成不同款？**
+
+示例机制（仅方法，不是固定答案）：
+
+- 每种情绪变成一种可见结构
+- 每款身体内部出现一种不同微缩世界
+- 同一轮廓被不同自然介质侵蚀
+- 每款都改变一个质量分布，但保留固定头部 DNA
+- 每款代表同一天不同时间状态
+- 所有服装都被同一种夸张比例规则重新解释
+
+如果删除颜色和服装后无法解释它们为什么属于同系列，说明仍然只是换装合集。
+
+## 5.2 变化预算
+
+默认使用启发式 `70 / 20 / 10`：
+
+- 70% 身份核心保持
+- 20% 服务系列主题变化
+- 10% 作为单款惊喜
+
+这不是行业标准，只是防止“完全一样”或“完全不像”的内部设计约束。
+
+## 5.3 系列结构
+
+可按需要定义：
+
+```yaml
+series_size: 8
+rarity_tiers:
+  regular: 8
+  secret: 1
+secret_upgrade:
+  - "结构变化"
+  - "材质变化"
+  - "光学变化"
+```
+
+隐藏款升级优先级：
+
+> **结构 > 材质 > 光学效果 > 互动 > 配件 > 单纯换色**
+
+## 5.4 每款款式卡
+
+```yaml
+variant_id: V01
+narrative_beat: "这一款正在经历什么"
+identity_invariants: "继承哪些 DNA"
+series_rule_application: "本款如何体现系列变形语法"
+expression: "表情与强度"
+pose: "姿态"
+material_delta: "材质变化"
+outfit_or_surface: "服装或表面处理"
+prop: "如有，必须承担身份/叙事/互动功能"
+surprise: "本款独有 10%"
 ```
 
 ---
 
-## 阶段 2：设计系列款式
+# 6. 阶段 4：材质、商品形态与互动
 
-每个款式需要定义：
-- 服装描述（**使用服装锚点！**）
-- 表情变化
-- 姿势（**必须多样化！**）
-- 配件
-- 场景/背景
-- 打光风格
+材质不是渲染词，而是角色语言。
 
-### 服装锚点系统 (CRITICAL)
+## 6.1 Material Map
 
-> [!IMPORTANT]
-> **必须**为每款服装创建锚点描述，群像和单人图都引用同一锚点，确保服装完全一致！
+用“部件 → 材料 → 颜色 → 表面 → 透明度 → 触感”描述：
+
+```yaml
+material_map:
+  face:
+    material: PVC
+    finish: matte
+    opacity: 1
+  body:
+    material: polyester_plush
+    tactile: short_soft_pile
+  accent:
+    material: clear_ABS
+    finish: glossy
+    opacity: 0.55
+```
+
+不知道实际工厂能力时，不虚构精确壁厚、公差等生产参数。
+
+## 6.2 产品形态不再只有四种
+
+常见载体包括但不限于：
+
+- vinyl / PVC / ABS figure
+- rotocast / soft vinyl
+- plush doll
+- vinyl-face plush / 搪胶毛绒
+- pendant / bag charm
+- squishy charm
+- articulated figure
+- magnetic object
+- mini diorama
+- lamp / night-light character object
+- phone charm / wearable accessory
+- acrylic / flat graphic product
+
+选择产品形态时优先看角色机制是否适配，而不是流行什么就强行套什么。
+
+## 6.3 配件三问
+
+任何配件至少承担一项：
+
+1. **身份功能**：没有它就不像这个角色
+2. **叙事功能**：说明这一款发生了什么
+3. **互动功能**：可以挂、拆、梳、转、磁吸、发光、替换或组合
+
+三项都没有时，默认删掉。
+
+## 6.4 互动字段（可选）
+
+```yaml
+interaction_mode:
+  - hang
+  - magnet
+  - comb
+  - removable
+  - rotate
+  - light
+  - dress-up
+```
+
+商品化与生产字段见 `schemas/design-spec.yaml`；概念设计阶段无需全部启用。
+
+---
+
+# 7. Outfit Anchor（继续保留，但降级为系列层）
+
+服装不再承担角色身份的主要责任。
+
+当服装确实是系列重要部分时，为每款创建：
 
 ```markdown
 # Outfit Anchor - [款式名称]
 
-## LOCKED Outfit (群像和单人图必须完全一致)
-
-### Main Garment
-- Type: [服装类型，如 sweater, dress, costume]
-- Color: [主色 + Hex，如 Red #C41E3A]
-- Secondary color: [次色 + Hex，如 White #FFFFFF]
-- Pattern: [图案描述，如 White snowflake pattern on chest]
-- Material texture: [材质，如 Knitted texture, chunky yarn]
-
-### Details (LOCKED)
-- Collar/Neckline: [领口，如 Ribbed round collar]
-- Sleeves: [袖子，如 Long sleeves with ribbed cuffs]
-- Fit: [版型，如 Relaxed oversized fit]
-- Special elements: [特殊元素，如 Small pompom at hem]
-
-### Accessories (LOCKED)
-- [配件1，如 Red santa hat with white fur trim]
-- [配件2，如 Green striped scarf]
+## SERIES_LOCKED / VARIANT_FLEXIBLE
+- Type:
+- Main color:
+- Secondary color:
+- Pattern:
+- Material / surface:
+- Silhouette contribution:
+- Collar / neckline:
+- Sleeves:
+- Fit:
+- Special elements:
+- Accessories:
 ```
 
-### 姿势多样性库 (避免全部站姿！)
-
-| 分类 | 姿势类型 | Prompt关键词 | 适用场景 |
-|-----|---------|-------------|---------|
-| **坐姿** | 盘腿坐 | sitting cross-legged on floor | 温馨、休闲 |
-| | 窗台坐 | sitting on windowsill, legs dangling | 梦幻、仰望 |
-| | 靠坐 | leaning against, relaxed sitting | 慵懒、舒适 |
-| **趴姿** | 托腮趴 | lying on stomach, chin in hands, feet up | 俏皮、可爱 |
-| | 趴在物品上 | lying over [object], arms hanging | 慵懒、惬意 |
-| **躺姿** | 仰躺 | lying on back, arms spread, snow angel pose | 欢乐、雪地 |
-| | 侧躺 | lying on side, curled up | 睡眠、可爱 |
-| **悬浮** | 漂浮 | floating in air, dreamy levitation | 魔法、梦境 |
-| | 飞翔 | flying pose with cape flowing | 英雄、奇幻 |
-| **动态站姿** | 单脚站 | standing on one leg, playful balance | 活泼、调皮 |
-| | 跳跃 | jumping with joy, feet off ground | 欢乐 |
-| **互动姿势** | 手持物品 | holding [item], looking at it lovingly | 故事感 |
-| | 拥抱配件 | hugging [plush/item] | 温馨 |
-
-### 产品形态扩展
-
-| 形态 | Prompt关键词 | 特点 |
-|-----|-------------|------|
-| 盲盒玩偶 | vinyl figure, collectible toy, blind box figure | 标准立体人偶 |
-| 毛绒挂件 | plush keychain, hanging charm, soft plush toy | 可爱软萌 |
-| 坐墩 | chubby sitting bean bag pose, round bottom | 胖胖坐姿 |
-| 亚克力立牌 | acrylic standee, flat illustration style, 2D art | 平面立牌 |
+若服装改变了角色黑色剪影，需要明确它属于 `SERIES_LOCKED` 还是临时变体，避免服装吞掉角色本体。
 
 ---
 
-## 阶段 3：生成群像
+# 8. 姿势库
 
-### 群像场景设计原则 (CRITICAL)
+姿势用于增强叙事，不再作为“制造差异”的主要手段。
 
-> [!IMPORTANT]
-> 群像需要有布景，但**不能喧宾夺主**！布景服务于主题，角色永远是视觉焦点。
+| 分类 | 示例 |
+|---|---|
+| 坐 | 盘腿、悬腿、塌坐、靠坐、蜷坐 |
+| 趴 | 托腮趴、压在物件上、四肢摊开 |
+| 躺 | 仰躺、侧躺、蜷缩、失重 |
+| 动态 | 跳跃、踉跄、前倾、后仰、旋转 |
+| 悬浮 | 漂浮、上升、倒置、被某种力量牵引 |
+| 互动 | 拥抱、拆装、梳理、拉扯、观察、藏起 |
 
-#### 构图优先级（从前到后）
-1. **前景角色** - 绝对主体，最高清晰度和饱和度
-2. **地面/平台** - 承载角色，提供空间感
-3. **中景道具** - 2-3个呼应主题的小道具，克制不堆砌
-4. **远景氛围** - 虚化处理，烘托气氛
+同系列姿势应服务于 `narrative_beat`，避免只是为了“每个都不同”。
 
-#### 背景处理技巧
-| 技巧 | Prompt 关键词 | 作用 |
-|-----|--------------|------|
-| 景深虚化 | `soft bokeh background`, `blurred background elements` | 突出前景角色 |
-| 色彩降级 | `desaturated background`, `muted background tones` | 避免背景抢眼 |
-| 简化元素 | `minimal background props`, `subtle scene elements` | 避免杂乱 |
-| 氛围光晕 | `soft ambient glow`, `dreamy atmosphere` | 增加层次感 |
+---
 
-### 群像 Prompt 结构
+# 9. 阶段 5：生成群像
+
+群像用于验证“整个系列是否成立”，不是只做漂亮海报。
+
+## 9.1 群像生成前检查
+
+必须已有：
+
+- Character Anchor
+- series transformation rule
+- 每款 variant card
+- 必要的 Outfit Anchor
+- material map / 产品形态
+
+## 9.2 群像设计原则
+
+视觉优先级：
+
+1. 角色轮廓与系列差异
+2. 角色之间的呼吸空间
+3. 平台/承载关系
+4. 少量场景元素
+5. 氛围背景
+
+背景不得掩盖轮廓测试。
+
+## 9.3 群像 Prompt 结构
 
 ```markdown
 ## Collection Group Shot Prompt
 
-### 1. Scene Setting (布景但不喧宾夺主)
-Blind box collection display, professional product photography,
-[主题场景描述，如: cozy Halloween pumpkin patch setting],
-soft gradient background with subtle [主题元素] silhouettes in bokeh,
-foreground figures in sharp focus, background softly blurred,
-desaturated background tones to emphasize characters
+### Design Intent
+[一句话写角色核心 + 系列 transformation rule]
 
-### 2. Platform/Ground (承载角色的平台)
-[平台描述，如: wooden crate platform with scattered autumn leaves],
-platform color complementing but not competing with figures
+### Identity Rules
+[展开 IDENTITY_LOCKED]
 
-### 3. Arrangement
-[数量] designer toys arranged in a group, varied heights and positions,
-some standing, some sitting, natural grouping with breathing room
+### Series Rules
+[展开 SERIES_LOCKED]
 
-### 4. Characters (从左到右，每个必须完整描述，引用服装锚点)
-- Left 1: [完整角色描述 + 发色 + 服装锚点内容]
-- Left 2: [完整角色描述 + 发色 + 服装锚点内容]
-- Center: [完整角色描述 + 发色 + 服装锚点内容]
-- Right 2: [完整角色描述 + 发色 + 服装锚点内容]
-- Right 1: [完整角色描述 + 发色 + 服装锚点内容]
+### Arrangement
+[数量] collectible characters, clearly separated silhouettes,
+varied pose and height only where consistent with each variant narrative,
+no overlapping of signature features
 
-### 5. Background Props (克制！2-3个即可)
-- [道具1，如: carved pumpkin with soft glow, slightly out of focus]
-- [道具2，如: small pile of candy corn, blurred in background]
+### Characters
+- V01: [完整款式卡]
+- V02: ...
 
-### 6. Lighting (突出角色)
-Product photography lighting, soft box lighting,
-rim light for character separation from background,
-[氛围打光，如: warm orange ambient glow from below]
+### Material Rendering
+[material map / finish stack]
 
-### 7. Technical
-High quality render, 4K, detailed [材质] texture,
-depth of field with f/2.8 equivalent bokeh
+### Scene
+minimal supporting environment, restrained props,
+characters remain the dominant visual information
+
+### Lighting
+lighting chosen to reveal silhouette, material contrast and facial grammar
+
+### Technical
+[按当前图像生成工具实际需要填写，不强制 4K/f2.8]
 ```
 
 ---
 
-## 阶段 4：创建位置映射表 (CRITICAL)
+# 10. 阶段 6：创建实际位置映射
 
-生成群像后，先查看实际图片是否款式齐全、角色清楚且符合锚点，再按实际位置创建映射表，**必须引用服装锚点**。不能将提示词中的计划位置当作实际位置；缺款、错装或严重遮挡时先修正群像：
+生成群像后必须先看真实图片，再创建 `position-mapping.md`。
 
-| 群像位置 | 款式名称 | 毛色/发色 (精确) | 服装锚点引用 | 姿势 | 对应单人图 |
-|---------|---------|-----------------|-------------|------|-----------|
-| 左1 | 南瓜斗篷款 | 奶油棕 #D2B48C | → Outfit-01 | 站姿手持南瓜灯 | 01-pumpkin-cape.png |
-| 左2 | 小恶魔款 | 焦糖棕 #8B4513 | → Outfit-02 | 单脚站俏皮 | 02-little-devil.png |
-| 中 | 幽灵披风款 | 奶油棕 #D2B48C | → Outfit-03 | 悬浮飘动 | 03-ghost-cloak.png |
-| 右2 | 巫师款 | 深巧克力 #3D2314 | → Outfit-04 | 坐姿翻魔法书 | 04-wizard.png |
-| 右1 | 隐藏款-骷髅 | **月光白 #F5F5F5** | → Outfit-05 | 躺姿装死 | 05-hidden-skeleton.png |
+不能把 Prompt 中计划的位置当成实际结果。
+
+| 实际位置 | Variant | 关键识别点 | 材质/颜色 | 姿势 | 单人图 |
+|---|---|---|---|---|---|
+| 左1 | V01 | ... | ... | ... | 01-v01.png |
+
+缺款、错装、身份 DNA 消失、严重遮挡时，先修群像。
 
 ---
 
-## 阶段 5：逐个生成单人图
+# 11. 阶段 7：逐个生成单人图
 
-> [!IMPORTANT]
-> **必须使用群像作为视觉参考！** 仅靠文字描述无法保证一致性，需要让图像生成工具直接看到群像中的角色形象。
+单人图必须使用群像作为视觉参考。
 
-### 单人图生成方法 (CRITICAL)
+每次同时提供：
 
-生成每张单人图时，**必须同时提供**：
-1. **群像图片** - 作为视觉参考
-2. **位置指示** - 明确指出是群像中的哪个角色
-3. **文字 Prompt** - 补充场景和技术细节
+1. 群像图片
+2. 实际位置
+3. Character Anchor
+4. 对应 Variant Card
+5. 必要的 Outfit Anchor
+6. Material Map
 
-### 单人图 Prompt 结构
+## 单人图 Prompt 结构
 
 ```markdown
-## Individual Figure Prompt
+请参考所附群像，生成其中 [实际位置 + 款式特征] 的单人图。
 
-### 0. Visual Reference (CRITICAL - 必须包含！)
-[附上群像图片 00-collection-group.png]
+### IDENTITY_LOCKED
+[完整展开]
 
-请参考上面的群像图片，为我生成其中 **[位置描述]** 的角色的单人特写图。
+### SERIES_LOCKED
+[完整展开]
 
-位置描述示例：
-- "从左数第1个角色"
-- "最右边的角色"
-- "正中间的角色"
-- "从右数第2个角色（穿紫色巫师袍的那个）"
+### THIS VARIANT
+[完整 Variant Card]
 
-这个角色在群像中的特征：
-- 服装：[简要描述，如：紫色巫师袍，尖顶帽]
-- 姿势：[群像中的姿势，如：盘腿坐着]
-- 位置：[精确位置，如：右边第二个]
+### MATERIAL MAP
+[完整展开]
 
-请保持这个角色的所有视觉特征（毛色、服装颜色、配件、比例）与群像完全一致！
-
-### 1. Foundation
-Designer toy, [材质类型] figure collectible,
-professional product photography, chibi proportions
-
-### 2. Character Anchor (从角色锚点完整复制！)
-[完整的LOCKED特征描述]
-
-### 3. Fur/Hair Color (必须显式声明！从映射表复制！)
-Fur Color: [颜色名] [Hex色号]
-例如: Fur Color: Cream brown #D2B48C
-
-**MUST match the character in the reference group image!**
-
-### 4. Outfit (从服装锚点完整复制！)
-[完整的服装锚点内容，不要简化！]
-
-**MUST match exactly as shown in the reference group image!**
-
-### 5. Expression & Pose
-Expression: [表情描述]
-Pose: [姿势描述，使用姿势库关键词]
-
-### 6. Scene & Background (不喧宾夺主)
-Background: [背景描述，使用虚化和低饱和]
-Scene elements: [2-3个场景元素，soft bokeh]
-Atmosphere: [氛围关键词]
-Platform: [承载平台描述]
-
-### 7. Lighting
-[打光描述，见打光库]
-rim light for figure separation
-
-### 8. Technical
-3/4 front view, high quality render, 4K,
-detailed [材质] texture, soft shadows,
-depth of field with background blur
+必须保持群像中该角色的轮廓、比例、五官语法、身份 token、颜色和关键材质关系一致。
+允许改变镜头和背景，但不得把角色重新设计成通用 chibi / 动画人物。
 ```
 
-### 调用图像生成工具时的操作步骤
-
-1. **上传群像图片** - 将 `00-collection-group.png` 作为输入图片
-2. **在 Prompt 开头明确指出位置** - "请参考这张群像，为我生成**从右数第2个角色**的单人图"
-3. **强调一致性要求** - "必须保持与群像中该角色完全一致的外观"
-4. **提供完整的场景描述** - 背景、打光等可以不同，但角色本身必须一致
-
-### 场景与打光库
-
-| 氛围 | 场景元素 | 背景描述 | 打光 |
-|-----|---------|---------|------|
-| 温馨暖意 | 壁炉、木地板、圣诞袜、毛毯 | warm living room | warm orange glow, fireplace lighting |
-| 梦幻星空 | 星星、月亮、飘落星尘、窗户 | night sky through window | soft blue-purple gradient, moonlight |
-| 甜蜜糖果 | 姜饼屋、糖果装饰、棒棒糖 | candy land background | pink warm lighting, sweet ambiance |
-| 节日欢乐 | 圣诞树、礼物盒、彩灯、金色装饰 | festive holiday scene | colorful bokeh lights, warm festive |
-| 清新雪景 | 雪花飘落、冰晶、雪地、白色环境 | snowy winter scene | cool blue-white lighting, soft diffused |
-| **万圣节神秘** | 南瓜灯、蜘蛛网、枯叶、蝙蝠剪影 | spooky halloween night | warm orange underglow, purple ambient |
-| **万圣节可爱** | 糖果篮、卡通幽灵、彩色南瓜 | cute halloween party | soft orange-purple gradient, playful |
-| **秋日森林** | 落叶、蘑菇、树桩、松果 | autumn forest floor | golden hour warm light, dappled shadows |
+问题图默认最多局部修正 2 次；仍失败则记录差异，不无限重试。
 
 ---
 
-## 阶段 6：一致性检查
+# 12. 阶段 8A：视觉一致性 QC
 
-### 必查项目
+至少检查：
 
-| 检查项 | 如何检查 | 常见问题 |
-|--------|---------|---------|
-| **发色一致** | 对比群像和单人图中同一角色的发色 | 群像金发→单人变棕发 |
-| **眼睛一致** | 检查眼型、大小、高光位置 | 眼睛变小/高光消失 |
-| **比例一致** | 检查头身比 | 单人图头变小/身体变长 |
-| **服装匹配** | 对比服装颜色、图案 | 图案消失/颜色偏移 |
-| **表情匹配** | 检查表情是否符合设计 | 表情与设定不符 |
+| 检查项 | 目标 |
+|---|---|
+| 轮廓 | signature 没有被服装/姿势吞掉 |
+| 比例 | 头身、肢体长度、质量分布一致 |
+| Face Grammar | 五官布局与信息量一致 |
+| Recognition Tokens | 没有消失、错位或变成其他形态 |
+| 材质 | 软/硬、透明/不透明关系一致 |
+| 色彩 | 身份色和系列色没有互换 |
+| 服装 | 锚点款式与群像一致 |
+| 系列规则 | 单人图仍体现 transformation rule |
 
-### 发现不一致时
-
-1. **找出具体差异**：发色/眼睛/比例/其他
-2. **检查单人图Prompt**：是否遗漏了发色声明？
-3. **修改Prompt**：
-   - 将发色描述放在更靠前的位置
-   - 使用更强调的语气：`Hair Color: MUST BE Golden blonde #F0C05A`
-   - 添加负面提示：`NOT brown hair, NOT dark hair`
-4. **重新生成并复查**：每张问题图默认最多修正 2 次；仍不通过时保留结果、标明具体差异及建议，不无限重试，也不修改锁定锚点来掩盖偏差。群像本身有误时先修正群像和映射，再重做受影响的单人图。
+不一致时优先修 Prompt 或参考图，不修改已批准的身份 DNA 来迁就错误结果。
 
 ---
 
-## 常见错误与解决
+# 13. 阶段 8B：审美与市场就绪 QC
 
-| 问题 | 原因 | 解决方案 |
-|-----|------|---------|
-| 群像单人发色不一致 | Prompt中省略了发色 | 每张图**必须**显式声明发色+Hex色号 |
-| 姿势全是站姿 | 未使用姿势库 | 参考姿势库，每款选择不同姿势 |
-| 背景太简单 | 只写了 "white background" | 添加场景元素 + 氛围 + 打光描述 |
-| 角色比例不一致 | 未锁定头身比 | 在角色锚点中固定比例并每次重复 |
-| 眼睛风格变化 | 未详细描述眼睛特征 | 锁定眼睛大小、形状、高光描述 |
+评分细则见 `references/market-readiness-scorecard.md`。
+
+默认九维：
+
+1. 识别度
+2. 人格/情绪
+3. 形体与五官原创性
+4. 配色与材质
+5. 系列语法
+6. 叙事必要性
+7. 可玩/使用潜力
+8. 商品实现合理性
+9. 传播与参考距离
+
+内部启发式通过线：**≥36/45 且任一项不低于 3**。
+
+这不是行业标准，而是 Skill 的自检门槛。
+
+## 四个强制快测
+
+### A. Silhouette Test
+纯黑剪影仍能识别主要身份结构。
+
+### B. Thumbnail Test
+缩小到约 80–120 px 后，仍至少保留一个身份信号。
+
+### C. Outfit Removal Test
+去掉服装和手持物后，角色仍像同一个 IP。
+
+### D. Reference Distance Test
+检查是否同时复用了某一热门角色的多项独占组合：
+
+- 相似头部轮廓
+- 相似器官组合
+- 相似五官布局
+- 相似标志物
+- 相似材质签名
+
+若多个高权重特征同时指向同一已知 IP，必须回到 Visual DNA 重做，而不是只换颜色。
 
 ---
 
-## 输出文件结构
+# 14. 常见失败模式
 
-每款服装锚点以稳定编号保存在 `series-design.md` 中，供所有提示词共同引用。保存实际提示词和实际生成结果；报告记录逐图检查结论、修正次数及未解决差异。文件名可按交付环境调整，不用占位文件冒充生成图片。
+| 问题 | 根因 | 修复 |
+|---|---|---|
+| 候选只是换动作换衣服 | 没有路线探索 | 回到阶段 1，强制高权重维度分叉 |
+| 角色都是 AI 动画脸 | Face Grammar 太泛 | 降低五官信息量或重构视觉重心 |
+| 所有角色都大头圆脸 | 默认 chibi 偏置 | 改用 body mass + proportion archetype |
+| 角色靠服装才能识别 | Visual DNA 太弱 | 强化 silhouette / recognition tokens |
+| 系列像六套换装 | 没 transformation rule | 先写一句话转换函数，再设计款式 |
+| 隐藏款只换色 | surprise 层级太低 | 优先改变结构/材质/光学/互动 |
+| 材质只是“3D 渲染词” | 没有 material map | 改为部件级材料关系 |
+| 配件越堆越多 | 没有功能审查 | 身份/叙事/互动三问，不满足则删 |
+| 一致但越来越无聊 | LOCKED 太多 | 改为 Identity / Series / Flexible 三层 |
+| 很像热门 IP | 把市场案例当部件库 | 只保留抽象机制，重做具体形态 |
 
+---
 
-```
+# 15. 输出文件结构
+
+```text
 [系列名称]/
-├── character-anchor.md           # 角色锚点定义
-├── series-design.md              # 系列款式设计
-├── position-mapping.md           # 群像位置映射表
+├── design-brief.md
+├── aesthetic-routes.md
+├── character-anchor.md
+├── series-design.md
+├── material-map.md
+├── position-mapping.md
 ├── prompts/
-│   ├── 00-collection-group.md    # 群像Prompt
-│   ├── 01-xxx.md                 # 各款式Prompt
+│   ├── 00-collection-group.md
+│   ├── 01-v01.md
 │   └── ...
-├── 00-collection-group.png       # 群像
-├── 01-xxx.png                    # 单人图
+├── 00-collection-group.png
+├── 01-v01.png
 ├── ...
-└── REPORT.md                     # 设计报告
+└── REPORT.md
 ```
+
+其中：
+
+- `aesthetic-routes.md` 记录被选中与被淘汰路线，避免后续重新收敛回同一种设计
+- `character-anchor.md` 记录 IP Core + Visual DNA
+- `series-design.md` 记录 transformation rule 与各 Variant Card
+- `REPORT.md` 同时记录视觉一致性 QC 和市场就绪 QC
 
 ---
 
-## 开始执行
+# 16. 开始执行
 
-1. 提取用户已提供的系列主题，缺失时再询问
-2. 创建角色锚点文件
-3. 设计系列款式（注意姿势多样性！）
-4. 生成群像并创建位置映射表
-5. 逐个生成单人图（每张必须声明发色！）
-6. 进行一致性检查
-7. 如有不一致，调整Prompt重新生成
-8. 输出完整系列和报告
+默认按以下顺序：
+
+1. 读取用户已有需求，不重复询问
+2. 判断是否需要审美路线探索
+3. 提出 4 条高差异路线并做多样性检查
+4. 用户选定后锁定 IP Core + Visual DNA
+5. 定义系列 transformation rule
+6. 设计具体款式和材质/商品策略
+7. 生成群像
+8. 基于真实群像创建位置映射
+9. 逐个生成单人图
+10. 做视觉一致性 QC
+11. 做审美/市场就绪 QC
+12. 不通过则回到对应设计层，而不是只堆 Prompt 修图
+
+如果用户已经明确批准某个阶段，继续执行，不重复确认。
