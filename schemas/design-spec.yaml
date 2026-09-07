@@ -1,0 +1,124 @@
+version: 2
+purpose: >-
+  Structured design state for toy-character-design. This is an agent schema,
+  not a user questionnaire. Fields should be inferred when possible and only
+  surfaced to the user when they materially change the design.
+
+brief:
+  ip_mode: original            # original | licensed | co-created
+  rights_status: owned         # owned | licensed | concept-only | unknown
+  target_audience: null
+  usage_scene: []              # desk | bag | shelf | unboxing | wearable | gift | other
+  target_srp: null
+  product_scope: concept       # concept | prototype | production
+
+ip_core:
+  emotion_core: null
+  character_desire: null
+  character_paradox: null
+  world_rule: null
+  recurring_motifs: []
+
+visual_dna:
+  silhouette_signature: []     # recommend 2-4
+  recognition_tokens: []       # recommend 1-3
+  proportion_archetype: custom # soft-round | compact | lanky | top-heavy | creature | irregular | custom
+  head_height_ratio: null      # optional measurable value; never assume a default
+  body_mass_profile: custom    # bean | pear | wedge | column | long-leg | top-heavy | irregular | custom
+  face_grammar:
+    information_density: medium # minimal | medium | expressive
+    visual_focus: eyes          # eyes | mouth | brow | mask | negative-space | mixed | custom
+    eye_rule: null
+    mouth_rule: null
+    nose_rule: null
+    negative_space_rule: null
+    expression_range: null
+  asymmetry_degree: 0          # 0-3
+  personality_axes:
+    cute: 0                    # 0-5, not a required dominant axis
+    weird: 0
+    rebellious: 0
+    melancholy: 0
+    fashion: 0
+  identity_material_cues: []
+
+locks:
+  identity_locked: []
+  series_locked: []
+  variant_flexible: []
+
+series:
+  transformation_rule: null
+  invariants: []
+  size: null
+  variant_delta_budget:
+    identity: 70
+    theme: 20
+    surprise: 10
+  rarity_tiers: null
+  secret_upgrade: []
+  variants: []
+
+variant_template:
+  variant_id: null
+  narrative_beat: null
+  identity_invariants: []
+  series_rule_application: null
+  expression: null
+  pose: null
+  material_delta: null
+  outfit_or_surface: null
+  prop:
+    description: null
+    function: null              # identity | narrative | interaction | mixed
+  surprise: null
+
+palette:
+  roles:
+    base: []
+    secondary: []
+    accent: []
+    neutral: []
+  notes: null
+
+materials:
+  material_map: {}
+  finish_stack: []              # matte | gloss | pearlescent | metallic | frosted | clear | custom
+  optical_effects: []           # translucent | clear | glitter | iridescent | glow | custom
+  tactile_contrast: null        # 0-3
+  soft_hard_interface: null
+
+product:
+  form: null                    # vinyl | soft-vinyl | plush | vinyl-plush | pendant | squishy | articulated | diorama | object | graphic | custom
+  interaction_mode: []          # hang | magnet | comb | removable | rotate | light | dress-up | custom
+  removable_parts: []
+  hero_shot_hook: null
+  unboxing_reveal: null
+  ugc_action: null
+
+production_optional:
+  manufacturing_route: null
+  part_count_budget: null
+  paint_mask_budget: null
+  seam_plan: null
+  mold_split_strategy: null
+  center_of_gravity_note: null
+  hanging_point: null
+  supplier_min_feature_mm: null # supplier input; do not invent
+  supplier_min_wall_mm: null    # supplier input; do not invent
+  assembly_tolerance_mm: null   # supplier input; do not invent
+  compliance_targets: []
+
+collaboration_optional:
+  collab_invariants: []
+  collab_transform_rule: null
+  approval_gate: null
+
+qc:
+  silhouette_test: pending
+  thumbnail_test: pending
+  outfit_removal_test: pending
+  reference_distance_test: pending
+  visual_consistency: pending
+  market_readiness_score: null
+  unresolved_risks: []
