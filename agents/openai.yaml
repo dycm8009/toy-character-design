@@ -1,0 +1,13 @@
+interface:
+  display_name: 玩具角色设计
+  short_description: 保留角色与服装锚点、群像到单人图流程，设计一致且姿势丰富的潮玩系列
+  default_prompt: 使用 $toy-character-design，帮我设计一套潮玩角色系列，从角色锚点开始，完成群像、单人图和一致性检查。
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
