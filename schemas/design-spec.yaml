@@ -1,8 +1,8 @@
-version: 2
+version: "2.1"
 purpose: >-
-  Structured design state for toy-character-design. This is an agent schema,
-  not a user questionnaire. Fields should be inferred when possible and only
-  surfaced to the user when they materially change the design.
+  Structured design state for toy-character-design, not a user questionnaire.
+  Infer fields where possible. Compile only current requirements and necessary
+  references into an isolated visual task; never send this entire state as a prompt.
 
 brief:
   ip_mode: original            # original | licensed | co-created
@@ -11,6 +11,8 @@ brief:
   usage_scene: []              # desk | bag | shelf | unboxing | wearable | gift | other
   target_srp: null
   product_scope: concept       # concept | prototype | production
+  user_hard_requirements: []   # id, text, source_turn; higher priority than presets
+  approval_checkpoints: []
 
 ip_core:
   emotion_core: null
@@ -20,22 +22,22 @@ ip_core:
   recurring_motifs: []
 
 visual_dna:
-  silhouette_signature: []     # recommend 2-4
+  silhouette_signature: []     # recommend 2-4; not a quota overriding user intent
   recognition_tokens: []       # recommend 1-3
   proportion_archetype: custom # soft-round | compact | lanky | top-heavy | creature | irregular | custom
-  head_height_ratio: null      # optional measurable value; never assume a default
+  head_height_ratio: null
   body_mass_profile: custom    # bean | pear | wedge | column | long-leg | top-heavy | irregular | custom
   face_grammar:
-    information_density: medium # minimal | medium | expressive
-    visual_focus: eyes          # eyes | mouth | brow | mask | negative-space | mixed | custom
+    information_density: medium
+    visual_focus: eyes
     eye_rule: null
     mouth_rule: null
     nose_rule: null
     negative_space_rule: null
     expression_range: null
-  asymmetry_degree: 0          # 0-3
+  asymmetry_degree: 0
   personality_axes:
-    cute: 0                    # 0-5, not a required dominant axis
+    cute: 0
     weird: 0
     rebellious: 0
     melancholy: 0
@@ -46,6 +48,8 @@ locks:
   identity_locked: []
   series_locked: []
   variant_flexible: []
+  approved_revision: null
+  approval_ref: null
 
 series:
   transformation_rule: null
@@ -70,7 +74,7 @@ variant_template:
   outfit_or_surface: null
   prop:
     description: null
-    function: null              # identity | narrative | interaction | mixed
+    function: null
   surprise: null
 
 palette:
@@ -83,14 +87,14 @@ palette:
 
 materials:
   material_map: {}
-  finish_stack: []              # matte | gloss | pearlescent | metallic | frosted | clear | custom
-  optical_effects: []           # translucent | clear | glitter | iridescent | glow | custom
-  tactile_contrast: null        # 0-3
+  finish_stack: []
+  optical_effects: []
+  tactile_contrast: null
   soft_hard_interface: null
 
 product:
-  form: null                    # vinyl | soft-vinyl | plush | vinyl-plush | pendant | squishy | articulated | diorama | object | graphic | custom
-  interaction_mode: []          # hang | magnet | comb | removable | rotate | light | dress-up | custom
+  form: null
+  interaction_mode: []
   removable_parts: []
   hero_shot_hook: null
   unboxing_reveal: null
@@ -114,6 +118,26 @@ collaboration_optional:
   collab_transform_rule: null
   approval_gate: null
 
+execution:
+  protocol_version: "1.0"
+  capability_status: pending   # verified | blocked_capability | pending; never assume
+  host_runtime: null
+  isolation_evidence: []
+  plan_schema: image-execution-plan.schema.json
+  plan_path: null
+  ledger_path: null
+  max_image_calls_per_task: 3  # initial + corrections; one shared persistent budget
+  independent_review_required: true
+  actual_image_binding_required: true
+  route_batch_review: pending
+  reference_registry: []       # id, role, path, sha256, source_task, source_revision
+  output_registry: []          # immutable paths, hashes, QC and approval state
+  stale_dependencies: []
+  user_authorized_revisions: []
+  legacy_migration: >-
+    Preserve previous design approvals; missing runtime evidence stays unverified.
+    Never fabricate receipts or retrospective successful QC for older images.
+
 qc:
   silhouette_test: pending
   thumbnail_test: pending
@@ -121,4 +145,6 @@ qc:
   reference_distance_test: pending
   visual_consistency: pending
   market_readiness_score: null
+  user_requirement_checks: []
   unresolved_risks: []
+  real_isolated_image_validation: pending

@@ -1,7 +1,7 @@
 interface:
   display_name: 玩具角色设计
-  short_description: 从审美路线探索、IP Core 与视觉 DNA 出发，完成系列变形、材质商品化、群像单人一致性和双重质量审查
-  default_prompt: 使用 $toy-character-design，帮我设计潮玩角色。先根据需求探索明显不同的审美路线，不要默认 chibi；选定方向后锁定 IP Core 和 Visual DNA，再完成系列设计、材质策略、群像、单人图与一致性/审美 QC。
+  short_description: 独立探索审美路线，锁定视觉 DNA，以隔离生图、独立评审和有限纠错完成潮玩系列
+  default_prompt: 使用 $toy-character-design，先读取生图执行协议并检查真实隔离能力；按用户边界探索差异化路线，实际生图后独立比较，再由用户选择。后续锁定 DNA，完成系列、群像、实际映射和单人图；逐图独立评审，首次加纠正最多三次，记录版本与未通过项，不以主会话伪装隔离。
   icon_small: assets/icon.svg
   icon_large: assets/icon.svg
 policy:

@@ -1,0 +1,117 @@
+{
+  "run_id": "example-scaffold-not-visual-validation",
+  "tasks": [
+    {
+      "id": "route:R1",
+      "stage": "route",
+      "subject": "R1",
+      "prompt": "原创潮玩女孩，收藏雨声；可爱，左右眼同形。探索上重下轻的卵石大形、眼部留白和哑光软胶；不依靠雨伞或衣服建立身份。",
+      "requirements": [
+        {
+          "id": "brief",
+          "text": "保持可爱女孩的身份与收藏雨声的主题。"
+        },
+        {
+          "id": "eyes",
+          "text": "左右眼遵循同一形状语法，不使用异瞳或意外大小眼。"
+        },
+        {
+          "id": "structure",
+          "text": "本体形成可识别结构，不依赖服装、配色或道具堆叠。"
+        },
+        {
+          "id": "integrity",
+          "text": "没有意外肢体/五官变形；以实际图片为依据。"
+        }
+      ],
+      "references": [],
+      "dependencies": {},
+      "identity_locked": false,
+      "requires_user_approval": true
+    },
+    {
+      "id": "route:R2",
+      "stage": "route",
+      "subject": "R2",
+      "prompt": "原创潮玩女孩，收藏雨声；可爱，左右眼同形。探索横向扁头与下重梨形身体、细缝眼和软硬材质反差；不依靠雨伞或衣服建立身份。",
+      "requirements": [
+        {
+          "id": "brief",
+          "text": "保持可爱女孩的身份与收藏雨声的主题。"
+        },
+        {
+          "id": "eyes",
+          "text": "左右眼遵循同一形状语法，不使用异瞳或意外大小眼。"
+        },
+        {
+          "id": "structure",
+          "text": "本体形成可识别结构，不依赖服装、配色或道具堆叠。"
+        },
+        {
+          "id": "integrity",
+          "text": "没有意外肢体/五官变形；以实际图片为依据。"
+        }
+      ],
+      "references": [],
+      "dependencies": {},
+      "identity_locked": false,
+      "requires_user_approval": true
+    },
+    {
+      "id": "route:R3",
+      "stage": "route",
+      "subject": "R3",
+      "prompt": "原创潮玩女孩，收藏雨声；可爱，左右眼同形。探索竖向柔和雕塑体块、眉部主导五官和局部半透明结构；不依靠雨伞或衣服建立身份。",
+      "requirements": [
+        {
+          "id": "brief",
+          "text": "保持可爱女孩的身份与收藏雨声的主题。"
+        },
+        {
+          "id": "eyes",
+          "text": "左右眼遵循同一形状语法，不使用异瞳或意外大小眼。"
+        },
+        {
+          "id": "structure",
+          "text": "本体形成可识别结构，不依赖服装、配色或道具堆叠。"
+        },
+        {
+          "id": "integrity",
+          "text": "没有意外肢体/五官变形；以实际图片为依据。"
+        }
+      ],
+      "references": [],
+      "dependencies": {},
+      "identity_locked": false,
+      "requires_user_approval": true
+    },
+    {
+      "id": "route:R4",
+      "stage": "route",
+      "subject": "R4",
+      "prompt": "原创潮玩女孩，收藏雨声；可爱，左右眼同形。探索紧凑不规则圆润体块、嘴部主导五官与织物触感；不依靠雨伞或衣服建立身份。",
+      "requirements": [
+        {
+          "id": "brief",
+          "text": "保持可爱女孩的身份与收藏雨声的主题。"
+        },
+        {
+          "id": "eyes",
+          "text": "左右眼遵循同一形状语法，不使用异瞳或意外大小眼。"
+        },
+        {
+          "id": "structure",
+          "text": "本体形成可识别结构，不依赖服装、配色或道具堆叠。"
+        },
+        {
+          "id": "integrity",
+          "text": "没有意外肢体/五官变形；以实际图片为依据。"
+        }
+      ],
+      "references": [],
+      "dependencies": {},
+      "identity_locked": false,
+      "requires_user_approval": true
+    }
+  ]
+}

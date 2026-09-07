@@ -1,111 +1,59 @@
 # toy-character-design
 
-一个用于原创潮玩角色与系列设计的 Skill。
+原创潮玩角色与系列设计 Skill。保留“审美路线 → IP Core / Visual DNA → 系列语法 → 材质 → 群像 → 实际位置映射 → 单人图 → 双重 QC”的设计主线。
 
-它保留原有“群像 → 单人图 → 一致性检查”的稳定生成流程，但把设计起点前移到 **审美路线探索、IP Core、Visual DNA、系列变形语法与材质策略**，避免把潮玩设计简化成固定 chibi 模板、换装和姿势变化。
+## v2.1：生图执行层
 
-## 核心变化
+不同路线、每款图片和每次修复使用独立上下文；评审与生成也隔离。
+干净上下文排除无关历史，但保留当前要求和真实批准参考。
+四路必须生成真实候选，逐图检查后再比较六组两两差异；不能把四张路线卡当作四种视觉答案。
 
-### 1. 从“填模板”改为“先发散路线”
+每个逻辑图片最多 **首次 1 次 + 纠正 2 次，共 3 次生图调用**。
+局部修复、整体重生、重新发散、工具失败共用次数；不通过的结果不能作为下游参考。
+每次修复后重查全部要求。身份已批准后，需要改 DNA 的问题交用户决定。
+上游改图会递归失效下游，并使旧群像位置映射失效；版本更新不清空预算。
+用户的可爱、对称五官或比例偏好优先于样式库启发式，不为反套路而违反要求。
 
-角色未定型时，默认先提出 4 条明显不同的审美路线。不同路线至少要在轮廓、比例、五官语法、材质、情绪姿态或系列机制中的 3 个高权重维度上产生差异。
+## 内容与职责
 
-只换颜色、服装、发型和动作，不算不同路线。
+| 文件 | 作用 |
+|---|---|
+| `SKILL.md` | 当前入口、设计步骤、确认节点、执行硬边界 |
+| `references/design-workflow-v2.md` | 完整保留升级前 v2 的设计说明与模板；执行规则以当前入口/协议为准 |
+| `references/image-execution-protocol.md` | 隔离、真实参考、逐图/批次评审、自动纠错及宿主接口 |
+| `references/style-presets.md` | 18 类设计机制，不按商业 IP 命名 |
+| `references/design-rules.md` | 组合、反套路、系列化与参考距离建议；服从用户边界 |
+| `references/market-readiness-scorecard.md` | 审美自检与快测，不代表市场成功 |
+| `schemas/design-spec.yaml` | 内部设计状态，不是用户填表 |
+| `schemas/image-execution-plan.schema.json` | 可校验的执行任务计划结构 |
+| `schemas/example-execution-plan.json` | 四路任务脚手架，不是实测图片或批准结果 |
+| `scripts/execution_guard.py` | 实际状态守卫、最小任务包、有限重试循环和 CLI |
+| `tests/test_execution_guard.py` | 不联网、不生图的合成状态测试 |
+| `reports/execution-protocol-verification.md` | 本次实施验证范围和未验证项目 |
 
-### 2. 不再默认 Chibi
+## 开始使用
 
-`chibi`、大眼、圆脸、可爱微笑、vinyl figure 都只是可选表达，不再写进基础模板。
+先加载 `SKILL.md`，每个生图阶段读取执行协议；仅按需读取设计知识，不把全库送入生图任务。
+设计已获批准时直接进入对应阶段，不重问已经回答的问题。
 
-角色改由以下核心维度定义：
+执行层使用 Python 3.10+ 标准库：
 
-- `silhouette_signature`
-- `recognition_tokens`
-- `proportion_archetype`
-- `body_mass_profile`
-- `face_grammar`
-- `personality_axes`
-- `character_paradox`
-
-### 3. 先定义系列语法，再设计具体款式
-
-每个系列先写一句 `series_transformation_rule`，明确为什么这些款属于同一系列。
-
-如果去掉服装和配色后无法解释系列关系，说明设计仍然只是“换装合集”。
-
-### 4. 材质成为设计语言
-
-使用 `material_map` 描述：
-
-> 部件 → 材料 → 颜色 → 表面 → 透明度 → 触感
-
-而不是只在 Prompt 里写 `matte vinyl`、`glossy` 等渲染词。
-
-### 5. 双重质量检查
-
-最终同时进行：
-
-- 视觉一致性 QC
-- 审美 / 市场就绪 QC
-
-并加入剪影、缩略图、去服装、参考距离等测试。
-
-## 工作流
-
-```text
-需求
-  ↓
-审美路线探索
-  ↓
-IP Core + Visual DNA
-  ↓
-系列变形语法
-  ↓
-材质 / 商品形态 / 互动
-  ↓
-群像
-  ↓
-实际位置映射
-  ↓
-单人图
-  ↓
-视觉一致性 QC
-  ↓
-审美与市场就绪 QC
+```sh
+python -m unittest discover -s tests -v
+python scripts/execution_guard.py init execution-ledger.json schemas/example-execution-plan.json
+python scripts/execution_guard.py next execution-ledger.json route:R1
 ```
 
-## 目录
+示例计划可初始化和检查，**这些命令不会生成图片**。
+真实运行由宿主提供 `Host.fresh_context / generate / review`，并可靠持久化同一账本。
+`run_task` 会自动执行有限的生成—评审—纠正循环；CLI 可供主控逐步记录真实调用。
+新阶段通过获授权的 `extend_plan` 添加，不能覆盖已有任务来刷新预算。
 
-```text
-toy-character-design/
-├── SKILL.md
-├── README.md
-├── schemas/
-│   └── design-spec.yaml
-├── references/
-│   ├── style-presets.md
-│   ├── design-rules.md
-│   └── market-readiness-scorecard.md
-├── agents/
-│   └── openai.yaml
-└── assets/
-```
+## 能力边界
 
-## 参考文件如何使用
+仓库已提供协议、状态管理和可测试的自动纠错控制逻辑，不包含已接通某个平台的生图/子 Agent 适配器。
+宿主不支持真实隔离或图片传入时停止，不把“忽略上下文”的文本当作隔离。
+上下文凭据由宿主执行记录提供；脚本不能独立鉴别宿主是否诚实。
+自动状态测试不代表已经生成高质量角色，也不代表通过真实隔离视觉验证。
 
-`SKILL.md` 只保留流程、硬规则和关键模板，避免提示词不断膨胀。
-
-`references/style-presets.md` 是按“设计机制”组织的样式库，不按热门品牌或具体 IP 命名。
-
-`references/design-rules.md` 记录组合、反套路、系列化、材质和参考距离规则。
-
-`references/market-readiness-scorecard.md` 提供 9 维自检表与强制快测。
-
-`schemas/design-spec.yaml` 是完整结构化字段，可由 Agent 自动推导；不是要求用户逐项填写的表单。
-
-## 原则
-
-- 学习热门潮玩的设计方法，不复制具体 IP 的独占识别组合。
-- 一致性锁定的是身份 DNA，不是所有细节。
-- 姿势和服装是表现层，不应承担角色主要辨识度。
-- 概念阶段不知道真实工厂限制时标记为 TBD，不虚构精确生产参数。
-- 内部评分阈值属于 Skill 的启发式自检，不是行业标准。
+设计来源沿用原仓库的改编基础 `zsyggg/designer-toy-skill`；继续保留群像到单人图的核心思想，并扩展原创设计和执行保障。

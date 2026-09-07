@@ -1,703 +1,163 @@
 ---
 name: toy-character-design
 description: >
-  潮玩角色与盲盒系列设计系统。先探索差异化审美方向，再锁定 IP 核心与视觉 DNA，随后完成系列变形、材质/商品形态、群像、单人图与质量审查。
-  适用于原创潮玩角色、盲盒系列、搪胶/软胶、毛绒与搪胶毛绒、挂件、摆件及其他收藏型角色商品。
-  关键词：潮玩设计、designer toy、art toy、角色DNA、轮廓识别、系列设计、视觉一致性、盲盒、vinyl figure、plush pendant
+  潮玩角色与盲盒系列设计系统。先独立探索审美路线，再锁定 IP Core 与视觉 DNA，
+  完成系列变形、材质、群像和单人图；使用干净生图上下文、独立视觉评审、有限自动纠错及版本追踪。
+  适用于原创潮玩角色、搪胶/软胶、毛绒、搪胶毛绒、挂件、摆件及收藏型角色商品。
 ---
 
-# 玩具角色设计
+# 玩具角色设计 · v2.1
 
-本 Skill 保留原有“群像 → 单人图 → 一致性检查”的可靠生成骨架，但不再把“chibi + 大眼 + 换装”当作潮玩的默认答案。
+设计主线不变：**需求 → 审美路线 → IP Core / Visual DNA → 系列语法 → 材质 → 群像 → 实际映射 → 单人图 → 双重 QC**。
+本版增加贯穿所有生图环节的执行协议，而不是增加一套限制创造力的长提示词。
 
-核心目标是把流程从“填模板”升级为：
+## 先读与优先级
 
-> **需求 → 审美路线探索 → IP Core → Visual DNA → 系列变形语法 → 材质/商品形态 → 群像 → 单人图 → 双重 QC**
+每次生图前读取 [生图执行协议](references/image-execution-protocol.md)。
+既有 v2 设计内容和完整模板保留在 [设计工作流参考](references/design-workflow-v2.md)；按当前阶段阅读，不全部塞进生图上下文。
 
-具体样式机制、组合规则和评分表放在：
+在平台安全与工具限制内，适用优先级为：
 
-- `references/style-presets.md`
-- `references/design-rules.md`
-- `references/market-readiness-scorecard.md`
-- `schemas/design-spec.yaml`
+**用户当前明确要求与批准的修改 → 已批准的角色/系列锚点 → 当前任务验收条件 → 样式库和启发式建议。**
 
-这些参考文件是设计知识库，不要求把所有字段逐项询问用户。
+用户新要求与已批准锚点冲突时，先形成有批准记录的新版本；不能一边沿用旧版本号一边改变 DNA。
+样式多样性、剪影数量、人格反差、五官简化及市场评分都不能覆盖用户的硬要求。
+例如指定“可爱、左右眼一致、大头小身”，就在这些边界内发散，不强迫怪诞、异瞳或修长体型。
+无法在当前边界满足全部目标时报告冲突，不偷偷放宽用户要求，也不假报通过。
 
----
+## 0. 执行前检查
 
-## 0. 执行原则
+提取用户已经给出的关键词、参考图、产品形态、款数和确认节点，不重复询问。
+用户只要方案、文案或提示词时，不启动生图，也不伪造图片检查结果。
 
-### 0.1 不把用户变成填表员
+主控可以保留完整历史。生成任务和评审任务必须由实际支持隔离的运行环境执行：
+每次使用新上下文、不继承主会话、不读取其他路线或上一款的生成对话。
+“忽略以上内容”及一个新 Agent 名称不构成隔离证据。
 
-先从用户现有描述中推断设计方向，只询问真正会改变结果的缺失信息。
+先验证生成和视觉评审两种执行能力、真实图片传入能力、结果导出能力及执行记录。
+环境没有这些能力时停在 `blocked_capability`，交付已完成的方案/任务包与缺失项。
+不得用主会话直接生图冒充隔离执行；任何非隔离探索都需用户另行明确授权，并标为未验证，不能作为已通过的下游基准。
 
-默认每轮最多集中确认少量关键决策；其余字段由 Skill 提案，并允许用户修改。
+运行状态由 `scripts/execution_guard.py` 管理；具体工具调用由宿主适配器承担。
+记录与代码不能创造宿主本来没有的子 Agent、生图或视觉能力。
 
-### 0.2 不默认 Chibi
+## 1. 审美路线探索：先看不同设计，不先看同角色多角度
 
-禁止把以下内容当成默认基础：
+用户没有定型角色、候选趋同或需要重做第一印象时，默认提出 R1–R4 四条路线。
+每条只保留本路线的简短设计机制、轮廓/比例/五官方向及用户边界。
+设计机制按需查阅 [样式库](references/style-presets.md) 和 [组合规则](references/design-rules.md)。
+不以品牌/IP 名称拼接部件，不把 chibi、大眼、圆脸、微笑、vinyl 或高细节 3D 作为通用默认。
 
-- 固定大头小身
-- 固定大眼睛
-- 固定圆脸
-- 固定可爱微笑
-- 固定 vinyl figure
-- 固定 3D 高细节商品渲染
+**路线卡不是最终候选。** 在用户授权生图的范围内：
 
-它们都只是可选路线。
+1. 四路分别在新上下文中生成真实图片；互不提供其他路线的图片、提示词或评价。
+2. 每图先做独立要求检查；不通过时在本任务剩余预算内纠正。
+3. 独立批次评审读取四张实际结果，检查六组两两关系；默认目标为每对至少三个高权重差异：轮廓、比例、五官语法、材质、情绪姿态、系列机制。
+4. 服装、颜色、动作不同不能独自冒充结构差异。失败时只重做相关未批准路线，不重置计数。
+5. 将真实候选、差异证据及未解决问题交用户选择。QC 通过不等于用户已选中。
 
-### 0.3 先创造设计机制，再写长 Prompt
+默认“四路”的数量按用户明确要求调整；更少/更多路线和新的探索批次都需记录范围。
+旧参考中的“至少两条非大头圆脸”“至少一条弱化可爱”等是无冲突时的探索建议，不是越过用户边界的指令。
+若三个差异目标在用户边界内不可达，停止宣称通过，交用户决定如何调整；不靠换色补足数量。
 
-当角色尚未定型时，不直接生成“完整精致成品”。先确定：
+## 2. 角色定型、锚点与多视角
 
-1. 角色为什么存在
-2. 第一眼靠什么被记住
-3. 黑色剪影是否有身份
-4. 哪些视觉 DNA 永远不变
-5. 系列变化遵循什么规则
+选定真实候选后，保存 IP Core 和 Visual DNA，沿用三层锁定：
 
-### 0.4 热门 IP 只学习方法，不复制部件
-
-禁止建立“某某 IP 风格”预设，也不要直接复用知名角色的独占识别组合。
-
-可以抽象学习：
-
-- 可爱与怪异并存
-- 低信息量五官 + 强轮廓
-- 情绪作为角色本体
-- 材质成为视觉语言
-- 极端表情成为系列规则
-- 软硬材质反差
-- 可穿戴/可挂/可互动
-
-但必须重新发明具体轮廓、器官、比例、标志和叙事。
-
-### 0.5 锁定分层
-
-所有设计字段分三层：
-
-- `IDENTITY_LOCKED`：角色身份 DNA，系列中不可随意改变
-- `SERIES_LOCKED`：本系列统一语法，只在当前系列锁定
-- `VARIANT_FLEXIBLE`：每款允许自由变化
-
-不再把所有细节都设为 LOCKED，以免一致性机制压制创造力。
-
----
-
-# 1. 工作流程
-
-```mermaid
-flowchart TD
-    A["0. 需求与边界"] --> B["1. 审美路线探索"]
-    B --> C["2. 锁定 IP Core + Visual DNA"]
-    C --> D["3. 系列变形语法与款式架构"]
-    D --> E["4. 材质 / 商品形态 / 互动"]
-    E --> F["5. 生成群像"]
-    F --> G["6. 创建实际位置映射"]
-    G --> H["7. 逐个生成单人图"]
-    H --> I["8A. 视觉一致性 QC"]
-    I --> J["8B. 审美与市场就绪 QC"]
-    J -->|通过| K["完成"]
-    J -->|不通过| L["回到对应设计层修正"]
-```
-
-原有群像和单人图流程继续保留，但它们不再是设计的起点。
-
----
-
-# 2. 阶段 0：需求与边界
-
-从已有信息提取：
-
-- 原创 / 授权 / 共创
-- 单角色还是角色群
-- 目标用户与使用场景
-- 产品形态是否已确定
-- 是否需要系列化 / 盲盒化
-- 是否已有世界观、情绪、关键词或参考图
-- 用户偏好的确认节点
-
-如果用户只给几个关键词，也可以直接进入路线探索，不要求先补齐完整设定。
-
-可选的商品化字段见 `schemas/design-spec.yaml`，不属于每次必填项。
-
----
-
-# 3. 阶段 1：审美路线探索（核心新增）
-
-这是防止“同一套模板换皮”的关键阶段。
-
-## 3.1 什么时候必须做路线探索
-
-以下任一情况出现时，先做路线探索，不直接锁定角色：
-
-- 用户只有关键词
-- 角色第一版过于普通
-- 看起来像动画路人 / AI 脸
-- 之前多个候选只是服装、动作不同
-- 轮廓、比例、脸部结构高度相似
-- 用户希望“更有潮玩感 / 更有辨识度 / 更多类型”
-
-## 3.2 默认输出 4 条明显不同的方向
-
-每条路线必须至少在以下 **3 个高权重维度**上与其他路线不同：
-
-1. silhouette / 轮廓母体
-2. proportion / 质量分布与比例
-3. face grammar / 五官语法
-4. material strategy / 材质策略
-5. emotional posture / 情绪姿态
-6. series mechanism / 后续系列化机制
-
-只换颜色、发型、服装、动作，不算不同路线。
-
-## 3.3 路线卡格式
-
-```yaml
-route_id: R1
-core_mechanism: "一句话设计机制"
-silhouette: "第一眼轮廓"
-proportion: "身体质量如何分布"
-face_grammar: "五官如何组织，而非只写大眼/小眼"
-personality_tension: "看起来 X，但其实 Y"
-material_direction: "材料如何参与视觉"
-series_potential: "未来如何形成系列"
-risk: "最容易滑向什么俗套"
-```
-
-样式机制从 `references/style-presets.md` 中组合，但禁止一次堆叠太多 preset。
-
-## 3.4 路线多样性门槛
-
-进入下一阶段前快速检查：
-
-- 四条路线是否能仅看黑色剪影分成至少 3 类？
-- 是否至少有 2 条不是“大头圆脸人形”？
-- 是否存在明显不同的五官语法？
-- 是否至少有一条由材质或结构驱动，而不是服装驱动？
-- 是否至少有一条弱化“可爱”，探索 weird / rebel / melancholy / fashion 等其他轴？
-
-不满足时重新发散。
-
----
-
-# 4. 阶段 2：IP Core + Visual DNA
-
-用户选定路线后，才正式锁定角色。
-
-## 4.1 IP Core
-
-角色至少需要以下四项：
-
-```yaml
-emotion_core: "角色长期承载的核心情绪或价值"
-character_desire: "它一直想做成什么"
-character_paradox: "看起来 X，但其实 Y"
-world_rule: "如果需要世界观，一条可持续产生故事的规则"
-```
-
-`character_paradox` 不是强制角色“叛逆”，而是防止角色只有单一形容词。
-
-## 4.2 Visual DNA
-
-Visual DNA 优先级高于服装。
-
-至少定义：
-
-```yaml
-silhouette_signature:
-  - "2–4 个轮廓识别点"
-recognition_tokens:
-  - "1–3 个局部身份标志"
-proportion_archetype: "soft-round / compact / lanky / top-heavy / creature / irregular / custom"
-body_mass_profile: "bean / pear / wedge / column / long-leg / top-heavy / custom"
-face_grammar: "五官布局与信息量规则"
-asymmetry_degree: 0-3
-personality_axes:
-  cute: 0-5
-  weird: 0-5
-  rebellious: 0-5
-  melancholy: 0-5
-  fashion: 0-5
-```
-
-### 轮廓原则
-
-每个原创 IP 推荐 2–4 个 `silhouette_signature`。
-
-至少 2 个应当在纯黑剪影里仍有意义，例如：
-
-- 特殊头部外轮廓
-- 不寻常肩胯比例
-- 身体质量集中位置
-- 标志性肢体长度关系
-- 头发/耳/角/帽体与头部融合形成的整体轮廓
-
-不要把“拿着某件道具”当成主要身份轮廓，除非它与角色永久融合。
-
-## 4.3 Face Grammar 不等于五官清单
-
-避免只填：大眼、小鼻、樱桃嘴。
-
-优先描述：
-
-- 信息量：极简 / 中等 / 高表达
-- 视觉重心：眼 / 嘴 / 眉 / 面罩 / 留白
-- 眼型关系：点状、窄缝、下垂、眼睑主导、无瞳、异形等
-- 嘴部关系：无嘴、微小、宽口、牙齿主导、偏位等
-- 面部留白比例
-- 对称 / 非对称
-- 表情变化幅度
-
-## 4.4 角色锚点文件
-
-生成 `character-anchor.md`：
-
-```markdown
-# Character Anchor - [角色名]
-
-## IDENTITY_LOCKED
-- IP Core: ...
-- Silhouette signatures: ...
-- Recognition tokens: ...
-- Proportion / body mass: ...
-- Face grammar: ...
-- Identity material cues: ...
-
-## SERIES_LOCKED
-- 本系列材质、颜色、变形规则等
-
-## VARIANT_FLEXIBLE
-- 表情、姿势、局部配色、道具、服装等允许变化项
-```
-
-注意：不再默认写 `chibi proportions`。
-
----
-
-# 5. 阶段 3：系列变形语法
-
-优秀系列不是“同一角色穿六套衣服”，而是同一 IP 在一条明确规则下产生多个变体。
-
-## 5.1 先写 transformation rule
-
-在设计具体款式前，必须能用一句话回答：
-
-> **这一系列究竟用什么规则把同一个角色变成不同款？**
-
-示例机制（仅方法，不是固定答案）：
-
-- 每种情绪变成一种可见结构
-- 每款身体内部出现一种不同微缩世界
-- 同一轮廓被不同自然介质侵蚀
-- 每款都改变一个质量分布，但保留固定头部 DNA
-- 每款代表同一天不同时间状态
-- 所有服装都被同一种夸张比例规则重新解释
-
-如果删除颜色和服装后无法解释它们为什么属于同系列，说明仍然只是换装合集。
-
-## 5.2 变化预算
-
-默认使用启发式 `70 / 20 / 10`：
-
-- 70% 身份核心保持
-- 20% 服务系列主题变化
-- 10% 作为单款惊喜
-
-这不是行业标准，只是防止“完全一样”或“完全不像”的内部设计约束。
-
-## 5.3 系列结构
-
-可按需要定义：
-
-```yaml
-series_size: 8
-rarity_tiers:
-  regular: 8
-  secret: 1
-secret_upgrade:
-  - "结构变化"
-  - "材质变化"
-  - "光学变化"
-```
-
-隐藏款升级优先级：
-
-> **结构 > 材质 > 光学效果 > 互动 > 配件 > 单纯换色**
-
-## 5.4 每款款式卡
-
-```yaml
-variant_id: V01
-narrative_beat: "这一款正在经历什么"
-identity_invariants: "继承哪些 DNA"
-series_rule_application: "本款如何体现系列变形语法"
-expression: "表情与强度"
-pose: "姿态"
-material_delta: "材质变化"
-outfit_or_surface: "服装或表面处理"
-prop: "如有，必须承担身份/叙事/互动功能"
-surprise: "本款独有 10%"
-```
-
----
-
-# 6. 阶段 4：材质、商品形态与互动
-
-材质不是渲染词，而是角色语言。
-
-## 6.1 Material Map
-
-用“部件 → 材料 → 颜色 → 表面 → 透明度 → 触感”描述：
-
-```yaml
-material_map:
-  face:
-    material: PVC
-    finish: matte
-    opacity: 1
-  body:
-    material: polyester_plush
-    tactile: short_soft_pile
-  accent:
-    material: clear_ABS
-    finish: glossy
-    opacity: 0.55
-```
-
-不知道实际工厂能力时，不虚构精确壁厚、公差等生产参数。
-
-## 6.2 产品形态不再只有四种
-
-常见载体包括但不限于：
-
-- vinyl / PVC / ABS figure
-- rotocast / soft vinyl
-- plush doll
-- vinyl-face plush / 搪胶毛绒
-- pendant / bag charm
-- squishy charm
-- articulated figure
-- magnetic object
-- mini diorama
-- lamp / night-light character object
-- phone charm / wearable accessory
-- acrylic / flat graphic product
-
-选择产品形态时优先看角色机制是否适配，而不是流行什么就强行套什么。
-
-## 6.3 配件三问
-
-任何配件至少承担一项：
-
-1. **身份功能**：没有它就不像这个角色
-2. **叙事功能**：说明这一款发生了什么
-3. **互动功能**：可以挂、拆、梳、转、磁吸、发光、替换或组合
-
-三项都没有时，默认删掉。
-
-## 6.4 互动字段（可选）
-
-```yaml
-interaction_mode:
-  - hang
-  - magnet
-  - comb
-  - removable
-  - rotate
-  - light
-  - dress-up
-```
-
-商品化与生产字段见 `schemas/design-spec.yaml`；概念设计阶段无需全部启用。
-
----
-
-# 7. Outfit Anchor（继续保留，但降级为系列层）
-
-服装不再承担角色身份的主要责任。
-
-当服装确实是系列重要部分时，为每款创建：
-
-```markdown
-# Outfit Anchor - [款式名称]
-
-## SERIES_LOCKED / VARIANT_FLEXIBLE
-- Type:
-- Main color:
-- Secondary color:
-- Pattern:
-- Material / surface:
-- Silhouette contribution:
-- Collar / neckline:
-- Sleeves:
-- Fit:
-- Special elements:
-- Accessories:
-```
-
-若服装改变了角色黑色剪影，需要明确它属于 `SERIES_LOCKED` 还是临时变体，避免服装吞掉角色本体。
-
----
-
-# 8. 姿势库
-
-姿势用于增强叙事，不再作为“制造差异”的主要手段。
-
-| 分类 | 示例 |
+| 层级 | 内容 |
 |---|---|
-| 坐 | 盘腿、悬腿、塌坐、靠坐、蜷坐 |
-| 趴 | 托腮趴、压在物件上、四肢摊开 |
-| 躺 | 仰躺、侧躺、蜷缩、失重 |
-| 动态 | 跳跃、踉跄、前倾、后仰、旋转 |
-| 悬浮 | 漂浮、上升、倒置、被某种力量牵引 |
-| 互动 | 拥抱、拆装、梳理、拉扯、观察、藏起 |
+| `IDENTITY_LOCKED` | 轮廓、比例/质量分布、五官语法、稳定识别标志与身份材质 |
+| `SERIES_LOCKED` | 当前系列的转换规则、配色角色、材质及共同元素 |
+| `VARIANT_FLEXIBLE` | 明确允许变化的表情、姿势、服装、配件、局部色彩 |
 
-同系列姿势应服务于 `narrative_beat`，避免只是为了“每个都不同”。
+人格/世界观服务于可见设计，不强迫每个角色拥有复杂故事或机械式反差。
+保留原有锚点模板、Face Grammar、识别结构及比例设计方法；详见设计工作流参考。
 
----
+需要角色基准图或多视角图时，每次使用独立任务，携带选中图/批准基准与本次视角要求。
+不提供已淘汰路线；不能通过换角度重新设计角色。实际图通过 QC 并获所需批准后才成为新基准。
 
-# 9. 阶段 5：生成群像
+## 3. 系列语法、款式与材质
 
-群像用于验证“整个系列是否成立”，不是只做漂亮海报。
+先明确一句 `series_transformation_rule`，再设计 Variant Card，避免只换衣服。
+保留 narrative beat、身份不变量、表情、姿态、材质差异、服装/表面、功能性配件与单款惊喜。
+`70/20/10` 只是变化预算启发式；隐藏款仍保留身份，结构/材质/光学/互动升级依用户需求选用。
 
-## 9.1 群像生成前检查
+Material Map 继续按“部件 → 材质 → 颜色 → 表面 → 透明度 → 触感”记录。
+姿势服务叙事，不承担路线差异的主要责任。服装重要时保留 Outfit Anchor。
+不虚构工厂参数；概念设计不强制商品生产限制。
+结构化状态使用 [design-spec](schemas/design-spec.yaml)，不要求用户逐字段填写。
 
-必须已有：
+## 4. 群像生成与实际映射
 
-- Character Anchor
-- series transformation rule
-- 每款 variant card
-- 必要的 Outfit Anchor
-- material map / 产品形态
+群像任务只接收：批准基准图、身份/系列锚点、各款要求、必要服装锚点、材质规则。
+每次在新上下文生成。构图优先保护轮廓、款间间距和识别点，布景不喧宾夺主。
 
-## 9.2 群像设计原则
+生成后立即独立检查：款数与隐藏款、身份、款式、肢体、遮挡、材质/颜色及需要出现的文字。
+缺款、错装、DNA 消失、严重遮挡或文字乱码均不得直接发布为有效群像。
+不需要文字时不要强塞名字；需要文字时不允许以“看起来像字”代替正确文字。
 
-视觉优先级：
+只有通过 QC 和约定确认节点的群像才能派生位置映射。
+查看真实图后保存 `position-mapping.json` 与可读版 `position-mapping.md`，JSON 至少含：
 
-1. 角色轮廓与系列差异
-2. 角色之间的呼吸空间
-3. 平台/承载关系
-4. 少量场景元素
-5. 氛围背景
-
-背景不得掩盖轮廓测试。
-
-## 9.3 群像 Prompt 结构
-
-```markdown
-## Collection Group Shot Prompt
-
-### Design Intent
-[一句话写角色核心 + 系列 transformation rule]
-
-### Identity Rules
-[展开 IDENTITY_LOCKED]
-
-### Series Rules
-[展开 SERIES_LOCKED]
-
-### Arrangement
-[数量] collectible characters, clearly separated silhouettes,
-varied pose and height only where consistent with each variant narrative,
-no overlapping of signature features
-
-### Characters
-- V01: [完整款式卡]
-- V02: ...
-
-### Material Rendering
-[material map / finish stack]
-
-### Scene
-minimal supporting environment, restrained props,
-characters remain the dominant visual information
-
-### Lighting
-lighting chosen to reveal silhouette, material contrast and facial grammar
-
-### Technical
-[按当前图像生成工具实际需要填写，不强制 4K/f2.8]
+```json
+{"group_sha256": "实际群像哈希", "inspected": true, "positions": {"V01": "实际位置与可识别服装特征"}}
 ```
 
----
+以上是结构示例，不能原样用占位值进入运行。计划位置不是实际映射。
+映射需要绑定群像版本；上游变化后旧映射及相关单人图立即标记 stale。
 
-# 10. 阶段 6：创建实际位置映射
+## 5. 单人图与其他衍生图
 
-生成群像后必须先看真实图片，再创建 `position-mapping.md`。
+每款独立任务，传入批准身份基准、已通过的真实群像、实际位置映射和该款要求。
+不要用上一款或未通过检查的图接力生成。
+必要参考必须实际进入工具输入；文件名、图片 ID 字符串或提示词中的“参考上图”不能代替真实绑定。
 
-不能把 Prompt 中计划的位置当成实际结果。
+生成每一张后立即检查，不等整套完成才发现偏差。
+主体/群像/单人图/场景图/验证图都遵守相同协议；动作或镜头可变，但不默许身份漂移。
+用户没有授权的新增资产或阶段，不因自动重试而顺带扩展。
 
-| 实际位置 | Variant | 关键识别点 | 材质/颜色 | 姿势 | 单人图 |
-|---|---|---|---|---|---|
-| 左1 | V01 | ... | ... | ... | 01-v01.png |
+## 6. 独立评审与自动纠正
 
-缺款、错装、身份 DNA 消失、严重遮挡时，先修群像。
+评审只读实际结果、批准参考和逐条验收条件，不读生成者的解释、审美自评或历史辩解。
+既有视觉一致性 QC 与 [审美评分/快测](references/market-readiness-scorecard.md) 继续保留。
+用户要求是硬门槛，不能被总分抵消；评分是内部启发式，不代表销量、用户选择或法律结论。
+没有真实图或可见证据的检查记 `unknown`，不可记通过。
 
----
-
-# 11. 阶段 7：逐个生成单人图
-
-单人图必须使用群像作为视觉参考。
-
-每次同时提供：
-
-1. 群像图片
-2. 实际位置
-3. Character Anchor
-4. 对应 Variant Card
-5. 必要的 Outfit Anchor
-6. Material Map
-
-## 单人图 Prompt 结构
-
-```markdown
-请参考所附群像，生成其中 [实际位置 + 款式特征] 的单人图。
-
-### IDENTITY_LOCKED
-[完整展开]
-
-### SERIES_LOCKED
-[完整展开]
-
-### THIS VARIANT
-[完整 Variant Card]
-
-### MATERIAL MAP
-[完整展开]
-
-必须保持群像中该角色的轮廓、比例、五官语法、身份 token、颜色和关键材质关系一致。
-允许改变镜头和背景，但不得把角色重新设计成通用 chibi / 动画人物。
-```
-
-问题图默认最多局部修正 2 次；仍失败则记录差异，不无限重试。
-
----
-
-# 12. 阶段 8A：视觉一致性 QC
-
-至少检查：
-
-| 检查项 | 目标 |
+| 偏差 | 处理 |
 |---|---|
-| 轮廓 | signature 没有被服装/姿势吞掉 |
-| 比例 | 头身、肢体长度、质量分布一致 |
-| Face Grammar | 五官布局与信息量一致 |
-| Recognition Tokens | 没有消失、错位或变成其他形态 |
-| 材质 | 软/硬、透明/不透明关系一致 |
-| 色彩 | 身份色和系列色没有互换 |
-| 服装 | 锚点款式与群像一致 |
-| 系列规则 | 单人图仍体现 transformation rule |
+| 肢体、漏标志、错色等局部执行错误 | `patch`：基准 + 问题图 + 最小修正；保留正确区域 |
+| 整体身份漂移 | `rerender`：回批准基准，不以失败图作为唯一身份参考 |
+| 未定型路线缺乏辨识度/批次趋同 | `redesign`：回该路线设计层，在用户边界内重做 |
+| 改动已批准 DNA 才能解决 | `awaiting_design_approval`：停下等待设计变更批准 |
+| 要求互相冲突 | `blocked_spec`：明确冲突，不替用户删要求 |
+| 能力或必要参考缺失 | 不调用生图，交代缺失项 |
+| 安全拒绝 | 记录后停止，不改写提示规避 |
 
-不一致时优先修 Prompt 或参考图，不修改已批准的身份 DNA 来迁就错误结果。
+**同一逻辑图片首次 1 次 + 纠正最多 2 次 = 最多 3 次生图调用。**
+局部修复、整体重生、重新发散与工具失败共用预算；换 Agent、换文件名、刷新参考都不能清零。
+新上下文也不重置次数。发生调用状态不明时先核对已预留尝试，不能盲目再调用。
+每次修复后重新核验全部关键要求，防止“手修好但脸变了”。
+到上限仍失败，保存结果/证据/差异并停止，该结果不进入下游。
+新的整轮探索或超出预算只可在用户明确批准的新范围内开展，并关联旧失败记录。
 
----
+## 7. 版本、运行与交付
 
-# 13. 阶段 8B：审美与市场就绪 QC
-
-评分细则见 `references/market-readiness-scorecard.md`。
-
-默认九维：
-
-1. 识别度
-2. 人格/情绪
-3. 形体与五官原创性
-4. 配色与材质
-5. 系列语法
-6. 叙事必要性
-7. 可玩/使用潜力
-8. 商品实现合理性
-9. 传播与参考距离
-
-内部启发式通过线：**≥36/45 且任一项不低于 3**。
-
-这不是行业标准，而是 Skill 的自检门槛。
-
-## 四个强制快测
-
-### A. Silhouette Test
-纯黑剪影仍能识别主要身份结构。
-
-### B. Thumbnail Test
-缩小到约 80–120 px 后，仍至少保留一个身份信号。
-
-### C. Outfit Removal Test
-去掉服装和手持物后，角色仍像同一个 IP。
-
-### D. Reference Distance Test
-检查是否同时复用了某一热门角色的多项独占组合：
-
-- 相似头部轮廓
-- 相似器官组合
-- 相似五官布局
-- 相似标志物
-- 相似材质签名
-
-若多个高权重特征同时指向同一已知 IP，必须回到 Visual DNA 重做，而不是只换颜色。
-
----
-
-# 14. 常见失败模式
-
-| 问题 | 根因 | 修复 |
-|---|---|---|
-| 候选只是换动作换衣服 | 没有路线探索 | 回到阶段 1，强制高权重维度分叉 |
-| 角色都是 AI 动画脸 | Face Grammar 太泛 | 降低五官信息量或重构视觉重心 |
-| 所有角色都大头圆脸 | 默认 chibi 偏置 | 改用 body mass + proportion archetype |
-| 角色靠服装才能识别 | Visual DNA 太弱 | 强化 silhouette / recognition tokens |
-| 系列像六套换装 | 没 transformation rule | 先写一句话转换函数，再设计款式 |
-| 隐藏款只换色 | surprise 层级太低 | 优先改变结构/材质/光学/互动 |
-| 材质只是“3D 渲染词” | 没有 material map | 改为部件级材料关系 |
-| 配件越堆越多 | 没有功能审查 | 身份/叙事/互动三问，不满足则删 |
-| 一致但越来越无聊 | LOCKED 太多 | 改为 Identity / Series / Flexible 三层 |
-| 很像热门 IP | 把市场案例当部件库 | 只保留抽象机制，重做具体形态 |
-
----
-
-# 15. 输出文件结构
+记录 task ID、实际 Prompt、上下文执行凭据、参考哈希/版本/顺序、输出文件、逐条 QC、尝试次数和批准记录。
+同一系列的运行账本必须持久保存；后续批准的阶段用 `extend_plan` 追加，不重建账本。
+不可覆盖旧尝试图片。群像或基准更新后递归失效下游；重新绑定和复查之前不能继续出图。
+局部影响不明确时保守阻断依赖，不猜测某些旧图“应该还能用”。
 
 ```text
-[系列名称]/
-├── design-brief.md
-├── aesthetic-routes.md
-├── character-anchor.md
-├── series-design.md
-├── material-map.md
-├── position-mapping.md
-├── prompts/
-│   ├── 00-collection-group.md
-│   ├── 01-v01.md
-│   └── ...
-├── 00-collection-group.png
-├── 01-v01.png
-├── ...
-└── REPORT.md
+[系列]/
+├── design-brief.md / aesthetic-routes.md
+├── character-anchor.md / series-design.md / material-map.md
+├── execution-plan.json / execution-ledger.json
+├── position-mapping.json / position-mapping.md
+├── prompts/                  # 实际发送的简短任务提示
+├── outputs/                  # 不可覆盖的逐次图片与基准版本
+├── reviews/                  # 单图 QC、四路对比、修正及批准证据
+└── REPORT.md                 # 通过/失败/未验证分别列明
 ```
 
-其中：
-
-- `aesthetic-routes.md` 记录被选中与被淘汰路线，避免后续重新收敛回同一种设计
-- `character-anchor.md` 记录 IP Core + Visual DNA
-- `series-design.md` 记录 transformation rule 与各 Variant Card
-- `REPORT.md` 同时记录视觉一致性 QC 和市场就绪 QC
-
----
-
-# 16. 开始执行
-
-默认按以下顺序：
-
-1. 读取用户已有需求，不重复询问
-2. 判断是否需要审美路线探索
-3. 提出 4 条高差异路线并做多样性检查
-4. 用户选定后锁定 IP Core + Visual DNA
-5. 定义系列 transformation rule
-6. 设计具体款式和材质/商品策略
-7. 生成群像
-8. 基于真实群像创建位置映射
-9. 逐个生成单人图
-10. 做视觉一致性 QC
-11. 做审美/市场就绪 QC
-12. 不通过则回到对应设计层，而不是只堆 Prompt 修图
-
-如果用户已经明确批准某个阶段，继续执行，不重复确认。
+仅将符合全部门槛的输出设为下游可用。已授权的执行纠错无需逐次打断用户；角色选择与身份变更仍保留用户决策。
+交付必须区分：规则已写入、状态测试已通过、实际隔离运行已验证、图片质量已由用户认可。
