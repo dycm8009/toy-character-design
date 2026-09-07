@@ -1,7 +1,7 @@
 interface:
   display_name: 玩具角色设计
-  short_description: 保留角色与服装锚点、群像到单人图流程，设计一致且姿势丰富的潮玩系列
-  default_prompt: 使用 $toy-character-design，帮我设计一套潮玩角色系列，从角色锚点开始，完成群像、单人图和一致性检查。
+  short_description: 从审美路线探索、IP Core 与视觉 DNA 出发，完成系列变形、材质商品化、群像单人一致性和双重质量审查
+  default_prompt: 使用 $toy-character-design，帮我设计潮玩角色。先根据需求探索明显不同的审美路线，不要默认 chibi；选定方向后锁定 IP Core 和 Visual DNA，再完成系列设计、材质策略、群像、单人图与一致性/审美 QC。
   icon_small: assets/icon.svg
   icon_large: assets/icon.svg
 policy:
